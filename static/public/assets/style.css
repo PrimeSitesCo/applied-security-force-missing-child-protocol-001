@@ -1,0 +1,343 @@
+/* Edit 1 */
+body {
+    min-height: 100%;
+    font-family: Open Sans, Helvetica, Arial, Lucida, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Use min-height instead of height */
+    background-color: #000;
+    overflow-y: auto; /* Allow vertical scrolling */
+    color:#000;
+    -webkit-overflow-scrolling: touch;
+    background: linear-gradient(to left, #ffffff, #EADFD7, #E0D5CE);
+}
+
+body.custom-background { background-color: #fff; }
+
+html {
+  height: 100%; /* Ensures html and body span the entire height of the viewport */
+}
+
+.form-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 650px;
+    margin: 20px; /* Add some margin to ensure space around the form */
+}
+
+.form-row {
+    display: flex;
+    justify-content: space-between; /* Adjusts the space between the fields */
+    align-items: center; /* Aligns items vertically in the center */
+}
+
+.form-field {
+    flex: 1; /* Each field takes equal space */
+    margin-right: 6px; /* Optional: adds some space between fields */
+}
+
+.form-field:last-child {
+    margin-right: 0; /* Removes margin from the last field */
+}
+
+/* Dark Mode Styles */
+body.custom-background.dark-mode { background-color: #000; }
+
+html.dark-mode {
+    background-color: #000;
+    height: 100%;
+}
+
+body.dark-mode {
+    background: linear-gradient(to right, #240F09, #400F01, #3A1003);
+    background-color: #000;
+    color: #e0e0e0;
+    min-height: 100%;
+}
+
+body.dark-mode select,
+body.dark-mode input[type="text"],
+body.dark-mode input[type="tel"],
+body.dark-mode input[type="email"],
+body.dark-mode input[type="date"] {
+    background-color: #444; /* Dark background for input fields */
+    color: #e0e0e0; /* Light text color for input fields */
+    border-color: #666; /* Darker border for inputs */
+}
+
+body.dark-mode button {
+    background: #F05423; /* Darker button background */
+    color: #fff; /* Light text on buttons */
+}
+
+body.dark-mode button:hover {
+    background: #667; /* Slightly lighter background on hover */
+}
+
+body.dark-mode a {
+    color: #9ab; /* Lighter link color for dark mode */
+}
+
+body.dark-mode a:hover {
+    color: #F05423; /* Slightly brighter link color on hover */
+}
+
+body.dark-mode .form-container {
+    background: rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+.dark-mode .textSmaller {
+	color: #aaa;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Light logo visible in light mode, hidden in dark mode */
+#light-logo {
+    display: block;
+}
+
+body.dark-mode #light-logo {
+    display: none;
+}
+
+/* Dark logo hidden in light mode, visible in dark mode */
+#dark-logo {
+    display: none;
+}
+
+body.dark-mode #dark-logo {
+    display: block;
+}
+
+@media all and (min-width: 1080px) {
+	#staffNamesSelect {
+	    height: 100px;
+	}
+}
+
+#toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px 0;
+}
+
+#toggle-container label {
+    margin-right: 4px;
+}
+
+.logo-container {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    margin-left:-10px;
+}
+
+.cf-turnstile {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 30px;
+    height: 69.5px;
+}
+
+label {
+    font-size: 0.8rem;
+}
+
+.logo {
+    width:100%;
+	max-width: 360px;
+}
+
+.textSmaller {
+    font-size: 11px;
+    color:#888;
+}
+
+#loggedInInfo {
+    text-align: left;
+    margin-bottom:40px;
+    font-size: 12px;
+    color:#888;
+}
+
+a {
+  color: #282B69;
+}
+a:hover {
+  color: #F05423;
+}
+
+input:disabled, textarea:disabled {
+    color: #a0a0a0 !important;         /* Subdued grey for light mode */
+    background-color: #f0f0f0 !important; /* Light grey background */
+    border-color: #d0d0d0 !important;    /* Subtle border */
+}
+
+.dark-mode input:disabled, .dark-mode textarea:disabled {
+    color: #888 !important;            /* Subdued grey for dark mode */
+    background-color: #444 !important; /* Dark grey background */
+    border-color: #666 !important;     /* Darker border */
+}
+
+.button-disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+h1, h2, h3, h4 {
+    font-family: Open Sans, Helvetica, Arial, Lucida, sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    font-size: 1.3rem;
+    letter-spacing: 2px;
+}
+
+@media all and (max-width: 800px) {
+    .form-container {
+        width: 96%;
+    	padding: 10px;
+    	margin: 8px;
+    }
+    logo-image {
+		width: 90%;
+		max-width: 350px;
+    }
+    input, button, select, textarea {
+		font-size: 16px;
+    }
+}
+
+#statusMessage {
+    margin-top:10px;
+    margin-bottom:10px;
+}
+
+.form-field {
+    margin-bottom: 10px;
+}
+
+.form-field label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-field input[type="text"],
+.form-field input[type="tel"],
+.form-field input[type="email"],
+.form-field input[type="date"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.form-field input[type="date"] {
+    width: 96%;
+    -webkit-appearance: none;
+    box-sizing: border-box;
+    height: 35px;
+}
+
+.form-field select {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button {
+    background: #F05423;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+	margin-top: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #282B69;
+}
+
+@font-face{
+	font-family:"PrimeSites";
+	src:url("./PrimeSites.otf") format("opentype");
+}
+.primesites_footer_container {
+    text-align:center;
+    margin-top:30px;
+}
+.primesites_footer {
+	font-family: 'PrimeSites', Helvetica, Arial, Lucida, sans-serif !important;
+	font-size: 13px;
+	white-space: nowrap;
+	text-decoration: none;
+}
+
+
+.assessment-area {
+    margin: 20px 0px;
+    padding-top: 10px;
+    border-top: 1px solid #ccc;
+}
+/*body.dark-mode .assessment-area {
+    border-color: #666;
+    background: #444;
+}*/
+.assessment-area h3 {
+    margin-top: 0;
+}
+.assessment-area textarea, #overallAssessmentSection textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+body.dark-mode .assessment-area textarea, #overallAssessmentSection textarea {
+    background: #444;
+    border-color: #666;
+    color: #fff;
+}
+.assessment {
+    margin-bottom: 15px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+body.dark-mode .assessment {
+    border-color: #666;
+    background: #444;
+}
+.assessment p {
+    margin: 5px 0;
+}
+body.dark-mode .assessment p {
+    color: #fff;
+}
+
+.assessment p[strong="Progress"] {
+    margin-top: 8px;
+    color: #666;
+}
+
+body.dark-mode .assessment p[strong="Progress"] {
+    color: #aaa;
+}

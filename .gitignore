@@ -1,0 +1,20 @@
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Wrangler local state (ignore everywhere)
+**/.wrangler/
+
+# Local env files (never commit secrets)
+workers/.dev.vars
+workers/.env
+
+# Optional build temp dirs
+dist/
+tmp/

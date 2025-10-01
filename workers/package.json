@@ -1,0 +1,10 @@
+{
+  "name": "app-template-001-workers",
+  "private": true,
+  "devDependencies": {
+    "wrangler": "4.33.2"
+  },
+  "scripts": {
+    "dev:remote": "wrangler dev --remote --env dev --port 8787"
+  }
+}

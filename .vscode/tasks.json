@@ -1,0 +1,13 @@
+// .vscode/tasks.json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Dev (remote, D1 dev)",
+      "type": "shell",
+      "options": { "cwd": "workers" },
+      "command": "npm run dev:remote",
+      "problemMatcher": []
+    }
+  ]
+}

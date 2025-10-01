@@ -1,0 +1,99 @@
+name: Deploy Worker (wrangler)
+
+on:
+  push:
+    branches: [ main, dev ]
+    paths:
+      - "workers/**"
+      - "static/**"
+      - ".github/workflows/deploy-worker.yml"
+  workflow_dispatch:
+
+jobs:
+
+  deploy-dev:
+    if: github.ref == 'refs/heads/dev'
+    environment: dev
+    runs-on: ubuntu-latest
+    permissions: { contents: read }
+    defaults: { run: { working-directory: workers } }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Put secrets (dev)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: workers
+          wranglerVersion: '4.33.2'
+          environment: dev
+          secrets: |
+            MAILGUN_API_KEY
+            TURNSTILE_SECRET
+        env:
+          MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+          TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
+
+      - name: Apply migrations (dev)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: workers
+          wranglerVersion: '4.33.2'
+          environment: dev
+          command: d1 migrations apply DATABASE --remote
+
+      - name: Deploy (dev)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: workers
+          wranglerVersion: '4.33.2'
+          environment: dev
+          command: deploy
+
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    runs-on: ubuntu-latest
+    permissions: { contents: read }
+    defaults: { run: { working-directory: workers } }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Put secrets (prod)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: workers
+          wranglerVersion: '4.33.2'
+          secrets: |
+            MAILGUN_API_KEY
+            TURNSTILE_SECRET
+        env:
+          MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+          TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
+
+      - name: Apply migrations (prod)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: workers
+          wranglerVersion: '4.33.2'
+          command: d1 migrations apply DATABASE --remote
+
+      - name: Deploy (prod)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: workers
+          wranglerVersion: '4.33.2'
+          command: deploy
