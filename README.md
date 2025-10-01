@@ -1,6 +1,6 @@
 # applied-security-force-missing-child-protocol-001
 
-Workers-only starter template for a Single Page Application (SPA): a single Cloudflare Worker serves both the **static site** and the **API**. Two environments:
+Workers-only starter template for a Single Page Application (SPA): a single Cloudflare Worker serves both the **static site** and the **API**. Two environments: 
 
 - **Prod Worker**: `app-template-001`
 - **Dev Worker**: `app-template-001-dev`
