@@ -54,7 +54,7 @@ html.dark-mode {
 }
 
 body.dark-mode {
-    background: linear-gradient(to right, #1D5489, #24303E, #24303E);
+    background: linear-gradient(to right, #243547, #17232F, #17232F);
     background-color: #000;
     color: #e0e0e0;
     min-height: 100%;
@@ -71,7 +71,7 @@ body.dark-mode input[type="date"] {
 }
 
 body.dark-mode button {
-    background: #F05423; /* Darker button background */
+    background: #3078B9; /* Darker button background */
     color: #fff; /* Light text on buttons */
 }
 
@@ -84,7 +84,7 @@ body.dark-mode a {
 }
 
 body.dark-mode a:hover {
-    color: #F05423; /* Slightly brighter link color on hover */
+    color: #3078B9; /* Slightly brighter link color on hover */
 }
 
 body.dark-mode .form-container {
@@ -175,7 +175,7 @@ a {
   color: #282B69;
 }
 a:hover {
-  color: #F05423;
+  color: #3078B9;
 }
 
 input:disabled, textarea:disabled {
@@ -261,7 +261,7 @@ h1, h2, h3, h4 {
 }
 
 button {
-    background: #F05423;
+    background: #3078B9;
     color: white;
     border: none;
     padding: 10px 20px;
