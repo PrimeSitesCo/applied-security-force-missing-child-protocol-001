@@ -1,11 +1,6 @@
 # applied-security-force-missing-child-protocol-001
 
-Workers-only starter template for a Single Page Application (SPA): a single Cloudflare Worker serves both the **static site** and the **API**. Two environments: 
-
-- **Prod Worker**: `app-template-001`
-- **Dev Worker**: `app-template-001-dev`
-
-Static files live in `/static`. Worker code, config, and D1 migrations live in `/workers`.
+Workers-only Single Page Application (SPA) for Applied Security Force called Missing Child Protocol.
 
 ---
 
