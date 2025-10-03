@@ -1,6 +1,6 @@
 {
     "name": "applied-security-force-missing-child-protocol-001",
-    "main": "worker.js",
+    "main": "workers/worker.js",
     "compatibility_date": "2025-10-01",
 
     "assets": {
