@@ -7,11 +7,11 @@ export default {
       const path = url.pathname;
       const method = request.method.toUpperCase();
 
-      if (path === '/__who') {
-        return new Response(`worker=${env.ENV_NAME || 'unknown'} ts=${new Date().toISOString()}`, {
-          status: 200,
-          headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' }
-        });
+      if (url.pathname === "/__who") {
+        return new Response(
+          `env=${env.ENV_NAME || "unknown"} ts=${Date.now()}`,
+          { headers: { "content-type": "text/plain" } }
+        );
       }
 
       // (Optional) add a marker so you can see who handled the request in DevTools
