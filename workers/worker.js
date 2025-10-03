@@ -7,6 +7,13 @@ export default {
       const path = url.pathname;
       const method = request.method.toUpperCase();
 
+      // (Optional) add a marker so you can see who handled the request in DevTools
+      function tag(resp, name) {
+        const h = new Headers(resp.headers || {});
+        h.set('x-handler', name);
+        return new Response(resp.body, { status: resp.status, statusText: resp.statusText, headers: h });
+      }
+
       // DEV DIAGNOSTIC — prove this worker handled GET /me
       if (method === 'GET' && path === '/me') {
         const resp = await handleMe(request, env);
@@ -23,8 +30,24 @@ export default {
         });
       }
 
+      // ---- API: health/status
       if (method === 'GET' && path === '/srvr') {
-        return srvrStatus(env, request);
+        return tag(await srvrStatus(env, request), 'api:/srvr');
+      }
+
+      // ---- API: session info
+      if (method === 'GET' && path === '/me') {
+        return tag(await handleMe(request, env), 'api:/me');
+      }
+
+      // ---- API: public config (turnstile/site key)
+      if (method === 'GET' && path === '/config') {
+        const enabled = String(env.TURNSTILE_ENABLED || '').toLowerCase() === 'true';
+        const siteKey = env.TURNSTILE_SITE_KEY || '';
+        return tag(new Response(JSON.stringify({ turnstile: { enabled, siteKey } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        }), 'api:/config');
       }
 
       if (method === 'POST' && path === '/verify-email') {
@@ -43,21 +66,6 @@ export default {
         return handleMagicLogin(request, env);
       }
 
-      if (method === 'GET' && path === '/me') {
-        return handleMe(request, env);
-      }
-
-      if (method === 'GET' && path === '/config') {
-        const enabled = String(env.TURNSTILE_ENABLED || '').toLowerCase() === 'true';
-        const siteKey = env.TURNSTILE_SITE_KEY || '';
-        return new Response(JSON.stringify({ turnstile: { enabled, siteKey } }), {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }); 
-      }
-
       // Gate protected UI bundles/chunks under /app/
       if (path.startsWith('/app/')) {
         const ok = await isAuthenticated(request, env);
@@ -66,8 +74,10 @@ export default {
           return new Response(null, { status: 302, headers: { Location: '/' } });
           // alt: return new Response('Unauthorized', { status: 403 });
         }
+
+        // Default: static assets (SPA index.html)
         const assetsResp = await env.ASSETS.fetch(request);
-        return withSecurityHeaders(assetsResp);
+        return tag(withSecurityHeaders(assetsResp), 'assets:fallback');
       }
     } catch (err) {
       console.error('Unhandled error:', err);
