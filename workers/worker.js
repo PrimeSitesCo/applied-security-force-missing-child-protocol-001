@@ -139,6 +139,9 @@ function json(body, status = 200, extraHeaders = {}) {
     status,
     headers: {
       'Content-Type': 'application/json',
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
       ...extraHeaders,
     },
   });
