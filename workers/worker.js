@@ -7,6 +7,14 @@ export default {
       const path = url.pathname;
       const method = request.method.toUpperCase();
 
+      // DEV DIAGNOSTIC — prove this worker handled GET /me
+      if (method === 'GET' && path === '/me') {
+        const resp = await handleMe(request, env);
+        const h = new Headers(resp.headers || {});
+        h.set('x-handler', 'api:/me(top)');
+        return new Response(await resp.text(), { status: resp.status, headers: h });
+      }
+
       // OPTIONS (preflight) — harmless even if mostly same-origin
       if (method === 'OPTIONS') {
         return new Response(null, {
