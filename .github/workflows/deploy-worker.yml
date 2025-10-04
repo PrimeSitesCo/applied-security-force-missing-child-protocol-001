@@ -54,7 +54,7 @@ jobs:
           workingDirectory: workers
           wranglerVersion: '4.33.2'
           environment: dev
-          command: deploy
+          command: deploy --entry worker.js --var BUILD_CANARY=dev-${{ github.run_id }}-${{ github.sha }}
 
   deploy-prod:
     if: github.ref == 'refs/heads/main'
@@ -96,4 +96,4 @@ jobs:
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: workers
           wranglerVersion: '4.33.2'
-          command: deploy
+          command: deploy --entry worker.js --var BUILD_CANARY=prod-${{ github.run_id }}-${{ github.sha }}

@@ -6,11 +6,13 @@ export default {
       const url = new URL(request.url);
       const path = url.pathname;
       const method = request.method.toUpperCase();
+      // This is a comment
+      // This is another comment
 
-      if (url.pathname === "/__who") {
+      if (url.pathname === '/__who') {
         return new Response(
-          `env=${env.ENV_NAME || "unknown"} ts=${Date.now()}`,
-          { headers: { "content-type": "text/plain" } }
+          `env=${env.ENV_NAME || 'unknown'} canary=${env.BUILD_CANARY || 'unset'} ts=${new Date().toISOString()}`,
+          { headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' } }
         );
       }
 
