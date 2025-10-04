@@ -24,7 +24,7 @@ export default {
       }
 
       // DEV DIAGNOSTIC — prove this worker handled GET /me
-      if (method === 'GET' && path === '/me') {
+      if (method === 'GET' && path === '/api/me') {
         const resp = await handleMe(request, env);
         const h = new Headers(resp.headers || {});
         h.set('x-handler', 'api:/me(top)');
