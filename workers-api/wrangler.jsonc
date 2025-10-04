@@ -1,0 +1,46 @@
+{
+  "name": "applied-security-force-missing-child-protocol-001-api",
+  "main": "worker.js",
+  "compatibility_date": "2025-10-01",
+
+  // No assets here on purpose
+  "d1_databases": [
+    {
+      "binding": "DATABASE",
+      "database_name": "applied-security-force-missing-child-protocol-001-database",
+      "database_id": "eb449e8b-5992-4e4b-b7e7-7f9cf8f752bb",
+      "migrations_dir": "../workers/migrations"
+    }
+  ],
+
+  "vars": {
+    "ENV_NAME": "production",
+    "COOKIE_NAME": "session",
+    "TURNSTILE_ENABLED": "true",
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAB4PwU5ElHTCSUvA",
+    "USE_MAGIC_LINK": "false",
+    "APP_BASE_URL": ""
+  },
+
+  "env": {
+    "dev": {
+      "name": "applied-security-force-missing-child-protocol-001-api-dev",
+      "d1_databases": [
+        {
+          "binding": "DATABASE",
+          "database_name": "applied-security-force-missing-child-protocol-001-dev-database",
+          "database_id": "fcb68ba1-394a-4603-a935-ccbd79667159",
+          "migrations_dir": "../workers/migrations"
+        }
+      ],
+      "vars": {
+        "ENV_NAME": "dev",
+        "COOKIE_NAME": "session",
+        "TURNSTILE_ENABLED": "false",
+        "TURNSTILE_SITE_KEY": "0x4AAAAAAB4PwU5ElHTCSUvA",
+        "USE_MAGIC_LINK": "false",
+        "APP_BASE_URL": ""
+      }
+    }
+  }
+}

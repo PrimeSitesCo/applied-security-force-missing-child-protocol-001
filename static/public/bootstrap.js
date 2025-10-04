@@ -88,7 +88,7 @@ function loadTurnstile(siteKey) {
 
 // ---- Auth state refresh ----
 function refreshAuthUI() {
-  fetch('/me', { headers: { 'Accept': 'application/json' } })
+  fetch('/api/me', { headers: { 'Accept': 'application/json' } })
     .then(r => r.json())
     .then(data => {
       if (data && data.authenticated) {
@@ -123,7 +123,7 @@ function submitEmailForVerification() {
   const tsInput = document.querySelector('input[name="cf-turnstile-response"]');
   const turnstileToken = tsInput ? tsInput.value : '';
 
-  fetch('/verify-email', {
+  fetch('/api/verify-email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, turnstileToken })
@@ -151,7 +151,7 @@ function verifyOTP() {
   const otp = document.getElementById('otp')?.value || '';
   const email = document.getElementById('verification-email')?.value.toLowerCase() || '';
 
-  fetch('/check-otp', {
+  fetch('/api/check-otp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, otp })
@@ -169,7 +169,7 @@ function verifyOTP() {
 }
 
 function logoutUser() {
-  fetch('/logout', { method: 'POST' })
+  fetch('/api/logout', { method: 'POST' })
     .finally(() => window.location.reload());
 }
 
@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 1) Fetch config (decide whether to load Turnstile)
-  fetch('/config', { headers: { 'Accept': 'application/json' } })
+  fetch('/api/config', { headers: { 'Accept': 'application/json' } })
     .then(r => r.json())
     .then(cfg => {
       CFG = cfg || CFG;

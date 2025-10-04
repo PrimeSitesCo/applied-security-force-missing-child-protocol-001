@@ -7,47 +7,45 @@ export default {
       const path = url.pathname;
       const method = request.method.toUpperCase();
 
-      // OPTIONS (preflight) — harmless even if mostly same-origin
-      if (method === 'OPTIONS') {
-        return new Response(null, {
-          status: 204,
-          headers: corsHeaders(request),
-        });
+      // ---- API NAMESPACE: /api/*  (handled BEFORE assets) ----
+      if (path === '/api/__who') {
+        return new Response(
+          `env=${env.ENV_NAME || 'unknown'} canary=${env.BUILD_CANARY || 'unset'} ts=${new Date().toISOString()}`,
+          { headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' } }
+        );
       }
 
-      if (method === 'GET' && path === '/srvr') {
-        return srvrStatus(env, request);
-      }
-
-      if (method === 'POST' && path === '/verify-email') {
-        return handleVerifyEmail(request, env);
-      }
-
-      if (method === 'POST' && path === '/check-otp') {
-        return handleCheckOtp(request, env);
-      }
-
-      if (method === 'POST' && path === '/logout') {
-        return handleLogout(request, env);
-      }
-
-      if (method === 'GET' && path === '/magic-login') {
-        return handleMagicLogin(request, env);
-      }
-
-      if (method === 'GET' && path === '/me') {
-        return handleMe(request, env);
-      }
-
-      if (method === 'GET' && path === '/config') {
+      if (path === '/api/config' && method === 'GET') {
         const enabled = String(env.TURNSTILE_ENABLED || '').toLowerCase() === 'true';
         const siteKey = env.TURNSTILE_SITE_KEY || '';
         return new Response(JSON.stringify({ turnstile: { enabled, siteKey } }), {
           status: 200,
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }); 
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+        });
+      }
+
+      if (path === '/api/srvr' && method === 'GET') {
+        return srvrStatus(env, request);
+      }
+
+      if (path === '/api/me' && method === 'GET') {
+        return handleMe(request, env);
+      }
+
+      if (path === '/api/verify-email' && method === 'POST') {
+        return handleVerifyEmail(request, env);
+      }
+
+      if (path === '/api/check-otp' && method === 'POST') {
+        return handleCheckOtp(request, env);
+      }
+
+      if (path === '/api/logout' && method === 'POST') {
+        return handleLogout(request, env);
+      }
+
+      if (path === '/api/magic-login' && method === 'GET') {
+        return handleMagicLogin(request, env);
       }
 
       // Gate protected UI bundles/chunks under /app/
@@ -58,6 +56,8 @@ export default {
           return new Response(null, { status: 302, headers: { Location: '/' } });
           // alt: return new Response('Unauthorized', { status: 403 });
         }
+
+        // ---- STATIC ASSETS / SPA for everything else ----
         const assetsResp = await env.ASSETS.fetch(request);
         return withSecurityHeaders(assetsResp);
       }
@@ -407,7 +407,7 @@ async function handleVerifyEmail(request, env) {
       otp_last_sent_at: nowISO(),
     });
 
-    const link = `${baseUrl(env, request)}/magic-login?e=${encodeURIComponent(email)}&t=${encodeURIComponent(token)}`;
+    const link = `${baseUrl(env, request)}/api/magic-login?e=${encodeURIComponent(email)}&t=${encodeURIComponent(token)}`;
     const ok = await sendEmail(env, {
       to: email,
       subject: 'Your secure sign-in link',

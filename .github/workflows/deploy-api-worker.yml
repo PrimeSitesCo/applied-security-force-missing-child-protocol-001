@@ -1,23 +1,20 @@
-name: Deploy Worker (wrangler)
+name: Deploy API Worker
 
 on:
   push:
     branches: [ main, dev ]
     paths:
-      - "workers/**"
-      - "static/**"
-      - ".github/workflows/deploy-worker.yml"
+      - "workers-api/**"
+      - ".github/workflows/deploy-api-worker.yml"
   workflow_dispatch:
 
 jobs:
-
   deploy-dev:
     if: github.ref == 'refs/heads/dev'
     environment: dev
     runs-on: ubuntu-latest
     permissions: { contents: read }
-    defaults: { run: { working-directory: workers } }
-
+    defaults: { run: { working-directory: workers-api } }
     steps:
       - uses: actions/checkout@v4
 
@@ -26,7 +23,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          workingDirectory: workers
+          workingDirectory: workers-api
           wranglerVersion: '4.41.0'
           environment: dev
           secrets: |
@@ -36,33 +33,22 @@ jobs:
           MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
           TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
 
-      - name: Apply migrations (dev)
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          workingDirectory: workers
-          wranglerVersion: '4.41.0'
-          environment: dev
-          command: d1 migrations apply DATABASE --remote
-
       - name: Deploy (dev)
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          workingDirectory: workers
+          workingDirectory: workers-api
           wranglerVersion: '4.41.0'
           environment: dev
-          command: deploy --var BUILD_CANARY=dev-${{ github.run_id }}-${{ github.sha }}
+          command: deploy
 
   deploy-prod:
     if: github.ref == 'refs/heads/main'
     environment: production
     runs-on: ubuntu-latest
     permissions: { contents: read }
-    defaults: { run: { working-directory: workers } }
-
+    defaults: { run: { working-directory: workers-api } }
     steps:
       - uses: actions/checkout@v4
 
@@ -71,7 +57,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          workingDirectory: workers
+          workingDirectory: workers-api
           wranglerVersion: '4.41.0'
           secrets: |
             MAILGUN_API_KEY
@@ -80,20 +66,11 @@ jobs:
           MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
           TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
 
-      - name: Apply migrations (prod)
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          workingDirectory: workers
-          wranglerVersion: '4.41.0'
-          command: d1 migrations apply DATABASE --remote
-
       - name: Deploy (prod)
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          workingDirectory: workers
+          workingDirectory: workers-api
           wranglerVersion: '4.41.0'
-          command: deploy --var BUILD_CANARY=prod-${{ github.run_id }}-${{ github.sha }}
+          command: deploy
