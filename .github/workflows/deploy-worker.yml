@@ -27,7 +27,7 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: workers
-          wranglerVersion: '4'
+          wranglerVersion: '4.41.0'
           environment: dev
           secrets: |
             MAILGUN_API_KEY
@@ -42,7 +42,7 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: workers
-          wranglerVersion: '4'
+          wranglerVersion: '4.41.0'
           environment: dev
           command: d1 migrations apply DATABASE --remote
 
@@ -52,7 +52,7 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: workers
-          wranglerVersion: '4'
+          wranglerVersion: '4.41.0'
           environment: dev
           command: deploy --var BUILD_CANARY=dev-${{ github.run_id }}-${{ github.sha }}
 
@@ -72,7 +72,7 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: workers
-          wranglerVersion: '4'
+          wranglerVersion: '4.41.0'
           secrets: |
             MAILGUN_API_KEY
             TURNSTILE_SECRET
@@ -86,7 +86,7 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: workers
-          wranglerVersion: '4'
+          wranglerVersion: '4.41.0'
           command: d1 migrations apply DATABASE --remote
 
       - name: Deploy (prod)
@@ -95,5 +95,5 @@ jobs:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           workingDirectory: workers
-          wranglerVersion: '4'
+          wranglerVersion: '4.41.0'
           command: deploy --var BUILD_CANARY=prod-${{ github.run_id }}-${{ github.sha }}
