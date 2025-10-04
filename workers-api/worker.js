@@ -48,6 +48,117 @@ export default {
         return handleMe(request, env);
       }
 
+      // ---------- EVENTS (PUBLIC READ) ----------
+        if (method === 'GET' && path.startsWith('/api/events/')) {
+        // /api/events/:slug
+        const slug = path.split('/').pop();
+        const event = await apiDbGetEventBySlug(env.DATABASE, slug);
+        if (!event) return apiJson({ success: false, error: 'Not found' }, 404);
+        return apiJson({
+            success: true,
+            event: {
+            slug: event.slug,
+            title: event.title,
+            venue: event.venue,
+            start_at: event.start_at,
+            end_at: event.end_at,
+            status: event.status,
+            }
+        });
+        }
+
+        // ---------- REGISTRATION (PUBLIC CREATE) ----------
+        if (method === 'POST' && path === '/api/register') {
+        // Public registration for an event (active only)
+        const ip = apiGetClientIP(request);
+        const ua = request.headers.get('user-agent') || '';
+        const body = await apiReadJson(request);
+
+        const slug = apiSlugify(apiRequireString(body.slug, 'slug', { max: 64 }));
+        const event = await apiDbGetEventBySlug(env.DATABASE, slug);
+        if (!event || event.status !== 'active') {
+            return apiJson({ success: false, error: 'Event is not accepting registrations' }, 400);
+        }
+
+        const parent_name = apiRequireString(body.parent_name, 'parent_name', { max: 160 });
+        const email = apiSanitizeEmail(body.email);
+        const mobile = apiNormalizePhone(apiRequireString(body.mobile, 'mobile', { max: 32 }));
+        const nok_name = body.nok_name ? apiRequireString(body.nok_name, 'nok_name', { max: 160 }) : null;
+        const nok_mobile = body.nok_mobile ? apiNormalizePhone(body.nok_mobile) : null;
+        const num_children = apiRequireInt(body.num_children, 'num_children', { min: 1, max: 20 });
+
+        // Generate unique short code
+        const prefix = (slug || '').replace(/[^a-z0-9]/g, '').slice(0,3).toUpperCase();
+        let reg_code, tries = 0;
+        while (tries < 5) {
+            reg_code = apiGenRegCode(prefix);
+            try {
+            await apiDbInsertRegistration(env.DATABASE, {
+                event_id: event.id,
+                parent_name, email, mobile,
+                nok_name, nok_mobile,
+                num_children, reg_code
+            });
+            break;
+            } catch (e) {
+            // retry on rare collision
+            if (String(e && e.message || '').match(/UNIQUE/i)) { tries++; continue; }
+            throw e;
+            }
+        }
+        if (!reg_code) return apiJson({ success: false, error: 'Could not allocate reg code' }, 500);
+
+        // Confirmation email (best-effort)
+        const subject = `Your registration code for ${event.title}`;
+        const text = `Thank you for registering for ${event.title} at ${event.venue}.
+
+        Your family registration code: ${reg_code}
+
+        Please write this code clearly on your children's wristbands/badges.
+        If a child is found, ASF staff will use this code to contact you.
+
+        Event date/time: ${event.start_at} → ${event.end_at} (UTC)
+        Venue: ${event.venue}`;
+        try { await sendEmail(env, { to: email, subject, text }); } catch {}
+
+        // Optional: audit if you keep a table; no-op is fine otherwise
+        // await apiDbInsertAudit(env.DATABASE, 'registration_created', { actor_ip: ip, user_agent: ua, event_id: event.id, reg_code });
+
+        return apiJson({ success: true, reg_code });
+        }
+
+        // ---------- STAFF LOOKUP (AUTH REQUIRED) ----------
+        if (method === 'POST' && path === '/api/lookup') {
+        // Require an authenticated user with Admin or Staff role
+        const who = await apiWhoAmI(request, env);
+        const roles = (who?.roles || []);
+        const allowed = who?.authenticated && (roles.includes('Administrator') || roles.includes('Staff'));
+        if (!allowed) return apiJson({ success: false, error: 'Forbidden' }, 403);
+
+        const body = await apiReadJson(request);
+        const slug = apiSlugify(apiRequireString(body.slug, 'slug', { max: 64 }));
+        const reg_code = apiRequireString(body.reg_code, 'reg_code', { min: 3, max: 12 }).toUpperCase();
+
+        const event = await apiDbGetEventBySlug(env.DATABASE, slug);
+        if (!event) return apiJson({ success: false, error: 'Event not found' }, 404);
+
+        const rec = await apiDbGetRegistrationByCode(env.DATABASE, event.id, reg_code);
+        if (!rec) return apiJson({ success: false, error: 'No match' }, 404);
+
+        return apiJson({
+            success: true,
+            contact: {
+            parent_name: rec.parent_name,
+            email: rec.email,
+            mobile: rec.mobile,
+            nok_name: rec.nok_name,
+            nok_mobile: rec.nok_mobile,
+            num_children: rec.num_children,
+            created_at: rec.created_at
+            }
+        });
+        }
+
       // Fallback
       return json({ success: false, error: 'Not found' }, 404);
     } catch (err) {
@@ -158,6 +269,106 @@ function baseUrl(env, request) {
     const u = new URL(request.url);
     return `${u.protocol}//${u.host}`;
   })();
+}
+// ----- Lightweight helpers (API Worker-local, prefixed api*) -----
+function apiJson(body, status = 200, extra = {}) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...extra },
+  });
+}
+function apiRequireString(s, label, { min = 1, max = 200 } = {}) {
+  const v = String(s ?? '').trim();
+  if (v.length < min || v.length > max) throw Object.assign(new Error(`Invalid ${label}`), { status: 422 });
+  return v;
+}
+function apiRequireInt(n, label, { min = 1, max = 100 } = {}) {
+  const v = Number(n);
+  if (!Number.isInteger(v) || v < min || v > max) throw Object.assign(new Error(`Invalid ${label}`), { status: 422 });
+  return v;
+}
+function apiSanitizeEmail(s) {
+  const v = String(s ?? '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) throw Object.assign(new Error('Invalid email'), { status: 422 });
+  return v;
+}
+function apiSlugify(s) {
+  return String(s || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 64);
+}
+function apiNormalizePhone(s) {
+  return String(s || '').replace(/[^\d+]/g, '').slice(0, 32);
+}
+function apiRandomAlnum(len = 4) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let out = '';
+  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+}
+function apiGenRegCode(prefix = '') {
+  prefix = String(prefix || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3);
+  return (prefix ? prefix + '-' : '') + apiRandomAlnum(4);
+}
+async function apiReadJson(req) {
+  const t = await req.text();
+  try { return JSON.parse(t || '{}'); } catch { throw Object.assign(new Error('Invalid JSON'), { status: 400 }); }
+}
+function apiGetClientIP(request) {
+  return request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || '0.0.0.0';
+}
+
+// ----- D1 helpers (match your schema names) -----
+async function apiDbGetEventBySlug(db, slug) {
+  return await db.prepare(`
+    SELECT id, slug, title, venue, start_at, end_at, status, retention_hours
+    FROM events
+    WHERE slug = ?
+  `).bind(slug).first();
+}
+async function apiDbInsertRegistration(db, r) {
+  const { event_id, parent_name, email, mobile, nok_name, nok_mobile, num_children, reg_code } = r;
+  await db.prepare(`
+    INSERT INTO registrations
+      (event_id, parent_name, email, mobile, nok_name, nok_mobile, num_children, reg_code)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(event_id, parent_name, email, mobile, nok_name, nok_mobile, num_children, reg_code).run();
+}
+async function apiDbGetRegistrationByCode(db, event_id, reg_code) {
+  return await db.prepare(`
+    SELECT id, parent_name, email, mobile, nok_name, nok_mobile, num_children, created_at
+    FROM registrations
+    WHERE event_id = ? AND reg_code = ?
+  `).bind(event_id, reg_code).first();
+}
+
+// ----- whoami (reuse existing /me cookie/session model) -----
+async function apiWhoAmI(request, env) {
+  const cookieName = env.COOKIE_NAME || 'session';
+  const token = (request.headers.get('Cookie') || '').split(';').map(s => s.trim())
+    .map(s => s.split('=')).find(([k]) => k === cookieName)?.[1];
+  if (!token) return { authenticated: false };
+
+  const tokenHash = await (async (text) => {
+    const enc = new TextEncoder(); const data = enc.encode(text);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    let b64 = btoa(String.fromCharCode(...new Uint8Array(digest)));
+    return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  })(token);
+
+  const row = await env.DATABASE.prepare(
+    `SELECT name, email, roles, session_expires_at
+     FROM persons WHERE session_token_hash = ?`
+  ).bind(tokenHash).first();
+
+  if (!row || !row.session_expires_at || new Date(row.session_expires_at) < new Date()) {
+    return { authenticated: false };
+  }
+  let roles = [];
+  try { roles = JSON.parse(row.roles || '[]') || []; } catch {}
+  return { authenticated: true, name: row.name || 'User', email: row.email, roles };
 }
 
 /* =======================
