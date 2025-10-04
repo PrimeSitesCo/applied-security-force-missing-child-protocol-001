@@ -88,7 +88,7 @@ function loadTurnstile(siteKey) {
 
 // ---- Auth state refresh ----
 function refreshAuthUI() {
-  fetch('/me', { headers: { 'Accept': 'application/json' } })
+  fetch('/api/me', { headers: { 'Accept': 'application/json' } })
     .then(r => r.json())
     .then(data => {
       if (data && data.authenticated) {
