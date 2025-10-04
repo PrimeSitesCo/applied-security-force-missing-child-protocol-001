@@ -6,72 +6,45 @@ export default {
       const url = new URL(request.url);
       const path = url.pathname;
       const method = request.method.toUpperCase();
-      // This is a comment
-      // This is another comment
 
-      if (url.pathname === '/__who') {
+      // ---- API NAMESPACE: /api/*  (handled BEFORE assets) ----
+      if (path === '/api/__who') {
         return new Response(
           `env=${env.ENV_NAME || 'unknown'} canary=${env.BUILD_CANARY || 'unset'} ts=${new Date().toISOString()}`,
           { headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' } }
         );
       }
 
-      // (Optional) add a marker so you can see who handled the request in DevTools
-      function tag(resp, name) {
-        const h = new Headers(resp.headers || {});
-        h.set('x-handler', name);
-        return new Response(resp.body, { status: resp.status, statusText: resp.statusText, headers: h });
-      }
-
-      // DEV DIAGNOSTIC — prove this worker handled GET /me
-      if (method === 'GET' && path === '/api/me') {
-        const resp = await handleMe(request, env);
-        const h = new Headers(resp.headers || {});
-        h.set('x-handler', 'api:/me(top)');
-        return new Response(await resp.text(), { status: resp.status, headers: h });
-      }
-
-      // OPTIONS (preflight) — harmless even if mostly same-origin
-      if (method === 'OPTIONS') {
-        return new Response(null, {
-          status: 204,
-          headers: corsHeaders(request),
+      if (path === '/api/config' && method === 'GET') {
+        const enabled = String(env.TURNSTILE_ENABLED || '').toLowerCase() === 'true';
+        const siteKey = env.TURNSTILE_SITE_KEY || '';
+        return new Response(JSON.stringify({ turnstile: { enabled, siteKey } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
         });
       }
 
-      // ---- API: health/status
-      if (method === 'GET' && path === '/srvr') {
-        return tag(await srvrStatus(env, request), 'api:/srvr');
+      if (path === '/api/srvr' && method === 'GET') {
+        return srvrStatus(env, request);
       }
 
-      // ---- API: session info
-      if (method === 'GET' && path === '/me') {
-        return tag(await handleMe(request, env), 'api:/me');
+      if (path === '/api/me' && method === 'GET') {
+        return handleMe(request, env);
       }
 
-      // ---- API: public config (turnstile/site key)
-      if (method === 'GET' && path === '/config') {
-        const enabled = String(env.TURNSTILE_ENABLED || '').toLowerCase() === 'true';
-        const siteKey = env.TURNSTILE_SITE_KEY || '';
-        return tag(new Response(JSON.stringify({ turnstile: { enabled, siteKey } }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        }), 'api:/config');
-      }
-
-      if (method === 'POST' && path === '/verify-email') {
+      if (path === '/api/verify-email' && method === 'POST') {
         return handleVerifyEmail(request, env);
       }
 
-      if (method === 'POST' && path === '/check-otp') {
+      if (path === '/api/check-otp' && method === 'POST') {
         return handleCheckOtp(request, env);
       }
 
-      if (method === 'POST' && path === '/logout') {
+      if (path === '/api/logout' && method === 'POST') {
         return handleLogout(request, env);
       }
 
-      if (method === 'GET' && path === '/magic-login') {
+      if (path === '/api/magic-login' && method === 'GET') {
         return handleMagicLogin(request, env);
       }
 
@@ -84,9 +57,9 @@ export default {
           // alt: return new Response('Unauthorized', { status: 403 });
         }
 
-        // Default: static assets (SPA index.html)
+        // ---- STATIC ASSETS / SPA for everything else ----
         const assetsResp = await env.ASSETS.fetch(request);
-        return tag(withSecurityHeaders(assetsResp), 'assets:fallback');
+        return withSecurityHeaders(assetsResp);
       }
     } catch (err) {
       console.error('Unhandled error:', err);
@@ -434,7 +407,7 @@ async function handleVerifyEmail(request, env) {
       otp_last_sent_at: nowISO(),
     });
 
-    const link = `${baseUrl(env, request)}/magic-login?e=${encodeURIComponent(email)}&t=${encodeURIComponent(token)}`;
+    const link = `${baseUrl(env, request)}/api/magic-login?e=${encodeURIComponent(email)}&t=${encodeURIComponent(token)}`;
     const ok = await sendEmail(env, {
       to: email,
       subject: 'Your secure sign-in link',
