@@ -1,0 +1,76 @@
+name: Deploy API Worker
+
+on:
+  push:
+    branches: [ main, dev ]
+    paths:
+      - "workers-api/**"
+      - ".github/workflows/deploy-api-worker.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy-dev:
+    if: github.ref == 'refs/heads/dev'
+    environment: dev
+    runs-on: ubuntu-latest
+    permissions: { contents: read }
+    defaults: { run: { working-directory: workers-api } }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Put secrets (dev)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: workers-api
+          wranglerVersion: '4.41.0'
+          environment: dev
+          secrets: |
+            MAILGUN_API_KEY
+            TURNSTILE_SECRET
+        env:
+          MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+          TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
+
+      - name: Deploy (dev)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: workers-api
+          wranglerVersion: '4.41.0'
+          environment: dev
+          command: deploy
+
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    runs-on: ubuntu-latest
+    permissions: { contents: read }
+    defaults: { run: { working-directory: workers-api } }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Put secrets (prod)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: workers-api
+          wranglerVersion: '4.41.0'
+          secrets: |
+            MAILGUN_API_KEY
+            TURNSTILE_SECRET
+        env:
+          MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+          TURNSTILE_SECRET: ${{ secrets.TURNSTILE_SECRET }}
+
+      - name: Deploy (prod)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          workingDirectory: workers-api
+          wranglerVersion: '4.41.0'
+          command: deploy
